@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Uygulamalarım</title>
+<style>
+:root { --bg: #F4F4F1; --surface: #FFFFFF; --ink: #1D2125; --muted: #5E656C; --line: #DEE0DC; color-scheme: light; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --bg: #131619; --surface: #1C2024; --ink: #E9ECEE; --muted: #9AA3AA; --line: #2E343A; color-scheme: dark; }
+}
+:root[data-theme="dark"] { --bg: #131619; --surface: #1C2024; --ink: #E9ECEE; --muted: #9AA3AA; --line: #2E343A; color-scheme: dark; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.5 -apple-system, "Segoe UI", sans-serif; }
+main { max-width: 520px; margin: 0 auto; padding: calc(env(safe-area-inset-top, 0px) + 28px) 16px 40px; display: grid; gap: 14px; }
+h1 { font-size: 26px; margin: 0; }
+p { margin: 0; color: var(--muted); }
+a.app { display: flex; align-items: center; gap: 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 12px 14px; color: inherit; text-decoration: none; }
+a.app img { width: 56px; height: 56px; border-radius: 13px; }
+a.app strong { display: block; font-size: 17px; }
+a.app span { color: var(--muted); font-size: 13.5px; }
+ol { margin: 0; padding-left: 20px; color: var(--muted); display: grid; gap: 4px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Uygulamalarım</h1>
+  <a class="app" href="stok/"><img src="stok/icon-180.png" alt=""><div><strong>Stok Dolabım</strong><span>Cilt bakımı, ilaç ve vitamin stoğu</span></div></a>
+  <a class="app" href="gun/"><img src="gun/icon-180.png" alt=""><div><strong>Gün Sayacı</strong><span>Almanya / Türkiye gün hesabı</span></div></a>
+  <p>iPhone'a kurmak için:</p>
+  <ol>
+    <li>Uygulamayı Safari'de aç.</li>
+    <li>Alttaki Paylaş düğmesine dokun.</li>
+    <li>“Ana Ekrana Ekle”yi seç.</li>
+  </ol>
+</main>
+</body>
+</html>
