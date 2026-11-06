@@ -1,0 +1,772 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Gün Sayacı</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Gün Sayacı">
+<meta name="theme-color" content="#F4F4F1" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#131619" media="(prefers-color-scheme: dark)">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Figtree:wght@400;500;600&display=swap">
+<style>
+:root { color-scheme: light; box-sizing: border-box; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+body { margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; -webkit-text-size-adjust: 100%; }
+img { max-width: 100%; }
+[hidden]:not([hidden=until-found i]) { display: none !important; }
+
+/* Layout: one phone-width column; reference date on top, two big day counts, a 12-month strip, then the trip list. Bottom sheets for editing and backup. */
+:root {
+  --bg: #F4F4F1;
+  --surface: #FFFFFF;
+  --ink: #1D2125;
+  --muted: #5E656C;
+  --line: #DEE0DC;
+  --tr: #C6362C;  --tr-soft: #F8E3E0;
+  --de: #2F4F6E;  --de-soft: #E2EAF2;
+  --pre: #B9BDB8;
+  --accent: #2F4F6E; --accent-ink: #FFFFFF;
+  --warn: #9A5B00; --warn-soft: #FBEFD9;
+  --bad: #B0281F;
+  --ok: #2E7A4C; --ok-soft: #E2F1E7;
+  --shadow: 0 10px 30px rgba(20, 28, 36, .14);
+  --f-display: "Bricolage Grotesque", "Avenir Next", "Segoe UI", sans-serif;
+  --f-body: "Figtree", "Segoe UI", -apple-system, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #131619; --surface: #1C2024; --ink: #E9ECEE; --muted: #9AA3AA; --line: #2E343A;
+    --tr: #F0857A; --tr-soft: #3B1F1C; --de: #8FB4DA; --de-soft: #1D2A38; --pre: #4A5056;
+    --accent: #8FB4DA; --accent-ink: #0F1A24; --warn: #E8B05A; --warn-soft: #3A2D16; --bad: #F08A80;
+    --ok: #74C996; --ok-soft: #1C3226;
+    --shadow: 0 10px 30px rgba(0,0,0,.5); color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #131619; --surface: #1C2024; --ink: #E9ECEE; --muted: #9AA3AA; --line: #2E343A;
+  --tr: #F0857A; --tr-soft: #3B1F1C; --de: #8FB4DA; --de-soft: #1D2A38; --pre: #4A5056;
+  --accent: #8FB4DA; --accent-ink: #0F1A24; --warn: #E8B05A; --warn-soft: #3A2D16; --bad: #F08A80;
+  --ok: #74C996; --ok-soft: #1C3226;
+  --shadow: 0 10px 30px rgba(0,0,0,.5); color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 15px; line-height: 1.45; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.app { max-width: 560px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 18px 120px; display: grid; gap: 14px; }
+.brand { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.brand-right { display: flex; gap: 8px; }
+h1 { font-family: var(--f-display); font-weight: 700; font-size: 26px; letter-spacing: -.01em; margin: 0; }
+.icon-btn { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 6px 12px; font-size: 13px; font-weight: 600; }
+
+.ref { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; display: grid; gap: 8px; }
+.ref-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.ref label { font-size: 13px; font-weight: 600; color: var(--muted); }
+.ref input { flex: 1 1 150px; min-width: 0; border: 1px solid var(--line); background: var(--bg); border-radius: 10px; padding: 8px 10px; font-size: 16px; }
+.ref .range { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.link { border: 0; background: transparent; color: var(--accent); font-weight: 600; padding: 4px 2px; font-size: 13px; }
+
+.counts { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.count { border-radius: 16px; padding: 14px 16px; display: grid; gap: 2px; }
+.count.de { background: var(--de-soft); color: var(--de); }
+.count.tr { background: var(--tr-soft); color: var(--tr); }
+.count .lbl { font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; }
+.count .num { font-family: var(--f-display); font-weight: 700; font-size: 46px; line-height: 1.05; font-variant-numeric: tabular-nums; }
+.count .sub { font-size: 13px; font-variant-numeric: tabular-nums; }
+.extra { font-size: 13px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 4px 14px; font-variant-numeric: tabular-nums; }
+.extra b { color: var(--ink); font-weight: 600; }
+
+.goal { border-radius: 14px; padding: 12px 14px; display: grid; gap: 8px; border: 1px solid var(--line); background: var(--surface); }
+.goal .head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.goal .pill { font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 999px; letter-spacing: .02em; }
+.goal.ok .pill { background: var(--ok-soft); color: var(--ok); }
+.goal.warn .pill { background: var(--warn-soft); color: var(--warn); }
+.goal.bad .pill { background: var(--tr-soft); color: var(--bad); }
+.goal .title { font-weight: 600; font-size: 15px; }
+.goal .bar { position: relative; height: 10px; border-radius: 5px; background: var(--line); overflow: hidden; }
+.goal .bar i { position: absolute; inset: 0 auto 0 0; background: var(--de); border-radius: 5px; }
+.goal .bar b { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--ink); }
+.goal .txt { font-size: 13px; color: var(--muted); display: grid; gap: 3px; font-variant-numeric: tabular-nums; }
+.goal .txt strong { color: var(--ink); font-weight: 600; }
+.strip-card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; display: grid; gap: 8px; }
+.strip { display: flex; height: 34px; border-radius: 8px; overflow: hidden; }
+.strip span { flex: 1 1 0; min-width: 0; }
+.strip .d { background: var(--de); } .strip .t { background: var(--tr); } .strip .p { background: var(--pre); }
+.strip .f { opacity: .5; }
+.months { display: flex; font-size: 10.5px; color: var(--muted); }
+.months span { flex: 1 1 0; min-width: 0; overflow: hidden; white-space: nowrap; border-left: 1px solid var(--line); padding-left: 3px; }
+.legend { display: flex; gap: 12px; flex-wrap: wrap; font-size: 12px; color: var(--muted); }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; }
+
+.section-title { font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 6px 2px 0; }
+.list { display: grid; gap: 8px; }
+.trip { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 11px 14px; text-align: left; width: 100%; }
+.trip .dates { font-weight: 600; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.trip .meta { font-size: 12.5px; color: var(--muted); overflow-wrap: anywhere; }
+.trip .tags { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 3px; }
+.tag { font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 999px; }
+.tag.plan { background: var(--de-soft); color: var(--de); }
+.tag.open { background: var(--warn-soft); color: var(--warn); }
+.tag.ex { background: var(--line); color: var(--muted); }
+.tag.err { background: var(--tr-soft); color: var(--bad); }
+.trip .inwin { text-align: right; font-variant-numeric: tabular-nums; }
+.trip .inwin b { display: block; font-family: var(--f-display); font-size: 22px; color: var(--tr); line-height: 1.1; }
+.trip .inwin small { font-size: 11px; color: var(--muted); }
+.trip.out-of-window { opacity: .6; }
+
+.banner { display: flex; gap: 10px; align-items: center; justify-content: space-between; flex-wrap: wrap; background: var(--de-soft); border-radius: 12px; padding: 10px 14px; font-size: 13px; }
+.banner button { border: 0; background: transparent; color: var(--accent); font-weight: 600; padding: 4px 0; }
+.banner.warn { background: var(--warn-soft); }
+.banner.warn button { color: var(--warn); }
+.notice { background: var(--warn-soft); color: var(--warn); border-radius: 12px; padding: 12px 14px; font-size: 14px; }
+.empty { text-align: center; padding: 28px 16px; color: var(--muted); display: grid; gap: 6px; justify-items: center; background: var(--surface); border: 1px dashed var(--line); border-radius: 14px; }
+.empty strong { color: var(--ink); font-family: var(--f-display); font-size: 17px; }
+.empty .btn { margin-top: 8px; }
+
+.fab { position: fixed; right: max(18px, calc(env(safe-area-inset-right, 0px) + 12px)); bottom: calc(env(safe-area-inset-bottom, 0px) + 18px); z-index: 6; height: 56px; padding: 0 22px 0 18px; border-radius: 28px; border: 0; background: var(--accent); color: var(--accent-ink); font-weight: 600; font-size: 15px; box-shadow: var(--shadow); display: flex; align-items: center; gap: 8px; }
+.fab svg { width: 20px; height: 20px; }
+
+.scrim { position: fixed; inset: 0; background: rgba(10, 16, 22, .45); z-index: 20; }
+.sheet { position: fixed; left: 0; right: 0; bottom: 0; z-index: 21; margin: 0 auto; max-width: 560px; max-height: 92%; overflow-y: auto; background: var(--surface); border-radius: 20px 20px 0 0; box-shadow: var(--shadow); padding-left: max(18px, env(safe-area-inset-left, 0px)); padding-right: max(18px, env(safe-area-inset-right, 0px)); padding-block: 10px calc(env(safe-area-inset-bottom, 0px) + 18px); }
+.grab { width: 40px; height: 4px; border-radius: 2px; background: var(--line); margin: 0 auto 10px; }
+.sheet h2 { font-family: var(--f-display); font-size: 20px; margin: 0 0 12px; }
+.sheet-p { margin: 0 0 12px; color: var(--muted); font-size: 14px; }
+.bk-last { font-size: 14px; margin-bottom: 12px; }
+.bk-last b { font-weight: 600; }
+.bk-confirm { margin-top: 14px; background: var(--tr-soft); border-radius: 12px; padding: 12px 14px; font-size: 14px; }
+.bk-confirm p { margin: 0 0 8px; }
+.bk-steps { margin: 0 0 12px; padding-left: 20px; color: var(--muted); font-size: 13.5px; display: grid; gap: 4px; }
+form { display: grid; gap: 12px; }
+form label { display: grid; gap: 4px; font-size: 13px; font-weight: 600; color: var(--muted); }
+.field { border: 1px solid var(--line); background: var(--bg); border-radius: 10px; padding: 10px 12px; font-size: 16px; font-weight: 400; color: var(--ink); width: 100%; min-width: 0; }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.hint { font-weight: 400; font-size: 12px; color: var(--muted); }
+.btn { border: 0; border-radius: 12px; padding: 11px 16px; font-weight: 600; background: var(--accent); color: var(--accent-ink); }
+.btn.ghost { background: transparent; color: var(--ink); border: 1px solid var(--line); }
+.btn.danger { background: transparent; color: var(--bad); border: 1px solid var(--bad); }
+.btn.danger.armed { background: var(--bad); color: var(--surface); }
+.actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
+.actions .btn:first-child { flex: 1 1 auto; }
+.form-err { color: var(--bad); font-size: 13px; }
+
+.datebtn { text-align: left; font-variant-numeric: tabular-nums; }
+.ref .datebtn { flex: 1 1 150px; min-width: 0; border: 1px solid var(--line); background: var(--bg); border-radius: 10px; padding: 8px 10px; font-size: 16px; }
+.datebtn.empty { color: var(--muted); }
+.pk-scrim { position: fixed; inset: 0; background: rgba(10, 16, 22, .45); z-index: 40; }
+.picker { position: fixed; z-index: 41; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(340px, calc(100% - 32px)); background: var(--surface); border-radius: 18px; box-shadow: var(--shadow); padding: 14px; display: grid; gap: 8px; }
+.pk-head { display: grid; grid-template-columns: 40px 1fr auto 40px; gap: 6px; align-items: center; }
+.pk-head select { border: 1px solid var(--line); background: var(--bg); border-radius: 10px; padding: 8px; font-size: 16px; font-weight: 600; min-width: 0; }
+.pk-nav { height: 40px; border: 0; background: transparent; font-size: 24px; border-radius: 10px; }
+.pk-nav:active { background: var(--de-soft); }
+.pk-week, .pk-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; text-align: center; }
+.pk-week span { font-size: 11.5px; font-weight: 600; color: var(--muted); padding: 4px 0; }
+.pk-week span:nth-child(n+6) { color: var(--tr); }
+.pk-grid button { height: 40px; border: 0; background: transparent; border-radius: 10px; font-size: 15px; font-variant-numeric: tabular-nums; touch-action: manipulation; }
+.pk-grid button:hover { background: var(--de-soft); }
+.pk-grid button.today { box-shadow: inset 0 0 0 1.5px var(--de); font-weight: 700; }
+.pk-grid button.sel { background: var(--accent); color: var(--accent-ink); font-weight: 700; }
+.pk-actions { display: flex; justify-content: space-between; gap: 8px; padding-top: 4px; border-top: 1px solid var(--line); }
+.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(env(safe-area-inset-bottom, 0px) + 86px); z-index: 50; background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 12px; font-size: 14px; max-width: calc(100% - 32px); box-shadow: var(--shadow); }
+@media (max-width: 380px) { .count .num { font-size: 38px; } }
+@media (prefers-reduced-motion: no-preference) {
+  .sheet:not([hidden]) { animation: up .22s ease-out; }
+  @keyframes up { from { transform: translateY(24px); opacity: .6; } to { transform: none; opacity: 1; } }
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="brand">
+    <h1>Gün Sayacı</h1>
+    <div class="brand-right">
+      <button class="icon-btn" id="backupBtn">Yedek</button>
+      <button class="icon-btn" id="settingsBtn">Ayarlar</button>
+    </div>
+  </div>
+
+  <div id="backupBanner" class="banner warn" hidden>
+    <span id="backupBannerText"></span>
+    <button id="backupBannerBtn">Yedek al</button>
+  </div>
+
+  <div class="ref">
+    <div class="ref-row">
+      <label for="refDate">Hesap tarihi</label>
+      <input type="hidden" id="refDate">
+      <button type="button" class="datebtn" data-for="refDate" id="refDateBtn"></button>
+      <button class="link" id="todayBtn">Bugün</button>
+    </div>
+    <div class="range" id="range">–</div>
+  </div>
+
+  <div class="counts">
+    <div class="count de"><span class="lbl">Almanya</span><span class="num" id="nDE">–</span><span class="sub" id="sDE">gün</span></div>
+    <div class="count tr"><span class="lbl">Türkiye</span><span class="num" id="nTR">–</span><span class="sub" id="sTR">gün</span></div>
+  </div>
+  <div class="goal" id="goal" hidden></div>
+  <div class="extra" id="extra"></div>
+
+  <div class="strip-card">
+    <div class="strip" id="strip" aria-label="Son bir yılın gün gün dağılımı"></div>
+    <div class="months" id="months"></div>
+    <div class="legend">
+      <span><i style="background:var(--de)"></i>Almanya</span>
+      <span><i style="background:var(--tr)"></i>Türkiye</span>
+      <span id="legPre" hidden><i style="background:var(--pre)"></i>Taşınmadan önce</span>
+      <span id="legFut" hidden><i style="background:var(--de);opacity:.5"></i>Gelecek (plan)</span>
+    </div>
+  </div>
+
+  <div id="notice" class="notice" hidden></div>
+  <div id="exampleBanner" class="banner" hidden>
+    <span>Listede örnek uçuşlar var.</span>
+    <button id="clearExamples">Örnekleri sil</button>
+  </div>
+  <div class="section-title">Türkiye seyahatleri</div>
+  <div class="list" id="list"></div>
+</div>
+
+<button class="fab" id="addBtn" aria-label="Seyahat ekle">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+  Seyahat ekle
+</button>
+
+<div class="scrim" id="scrim" hidden></div>
+
+<div class="sheet" id="tripSheet" role="dialog" aria-modal="true" aria-labelledby="tripTitle" hidden>
+  <div class="grab"></div>
+  <h2 id="tripTitle">Seyahat ekle</h2>
+  <form id="tripForm" novalidate>
+    <div class="two">
+      <label>Türkiye'ye gidiş
+        <input type="hidden" id="f-out">
+        <button type="button" class="field datebtn" data-for="f-out" data-empty="Tarih seç" id="f-out-btn"></button>
+      </label>
+      <label>Almanya'ya dönüş
+        <input type="hidden" id="f-back">
+        <button type="button" class="field datebtn" data-for="f-back" data-empty="Belli değil" data-optional="1" id="f-back-btn"></button>
+        <span class="hint">Henüz belli değilse boş bırak</span>
+      </label>
+    </div>
+    <label>Not
+      <input class="field" id="f-note" maxlength="120" placeholder="ör. Bayram, İstanbul">
+    </label>
+    <div class="form-err" id="tripErr" hidden></div>
+    <div class="actions">
+      <button type="submit" class="btn" id="saveTrip">Kaydet</button>
+      <button type="button" class="btn ghost" data-close>Vazgeç</button>
+      <button type="button" class="btn danger" id="deleteTrip" hidden>Sil</button>
+    </div>
+  </form>
+</div>
+
+<div class="sheet" id="setSheet" role="dialog" aria-modal="true" aria-labelledby="setTitle" hidden>
+  <div class="grab"></div>
+  <h2 id="setTitle">Ayarlar</h2>
+  <form id="setForm" novalidate>
+    <label>Almanya'ya taşınma tarihi
+      <input type="hidden" id="s-move">
+      <button type="button" class="field datebtn" data-for="s-move" data-empty="Seçilmedi" data-optional="1" id="s-move-btn"></button>
+      <span class="hint">Bu tarihten önceki günler Almanya'ya sayılmaz, ayrıca gösterilir.</span>
+    </label>
+    <label>Almanya'da en az kalınması gereken gün
+      <input class="field" id="s-min" type="number" inputmode="numeric" min="0" max="366" value="181">
+      <span class="hint">Son 1 yıl içinde. Uygulama bu sınıra göre uyarır.</span>
+    </label>
+    <label>Uçuş günleri nasıl sayılsın
+      <select class="field" id="s-travel">
+        <option value="split">Gidiş günü Türkiye, dönüş günü Almanya</option>
+        <option value="de">İkisi de Almanya</option>
+        <option value="tr">İkisi de Türkiye</option>
+      </select>
+      <span class="hint">İlk seçenekte her gün, o gecenin geçtiği ülkeye sayılır.</span>
+    </label>
+    <div class="actions">
+      <button type="submit" class="btn" id="saveSet">Kaydet</button>
+      <button type="button" class="btn ghost" data-close>Vazgeç</button>
+    </div>
+  </form>
+</div>
+
+<div class="sheet" id="bkSheet" role="dialog" aria-modal="true" aria-labelledby="bkTitle" hidden>
+  <div class="grab"></div>
+  <h2 id="bkTitle">Yedek</h2>
+  <p class="sheet-p">Seyahatlerin ve ayarların sadece bu telefonda saklanıyor. Ayda bir yedek al ve dosyayı iCloud Drive'a kaydet. Telefon değişirse ya da uygulama silinirse bu dosyadan geri yüklersin.</p>
+  <ol class="bk-steps">
+    <li>“Yedek al”a dokun.</li>
+    <li>Açılan menüde “Dosyalar'a Kaydet”i seç.</li>
+    <li>iCloud Drive'da bir klasör seçip “Kaydet”e dokun.</li>
+  </ol>
+  <div class="bk-last" id="bkLast"></div>
+  <div class="actions">
+    <button type="button" class="btn" id="bkExport">Yedek al</button>
+    <button type="button" class="btn ghost" id="bkImport">Yedekten geri yükle</button>
+  </div>
+  <div class="bk-confirm" id="bkConfirm" hidden>
+    <p id="bkConfirmText"></p>
+    <div class="actions">
+      <button type="button" class="btn danger armed" id="bkConfirmYes">Evet, geri yükle</button>
+      <button type="button" class="btn ghost" id="bkConfirmNo">Vazgeç</button>
+    </div>
+  </div>
+  <div class="actions" style="margin-top:14px">
+    <button type="button" class="btn ghost" data-close>Kapat</button>
+  </div>
+</div>
+
+<div class="pk-scrim" id="pkScrim" hidden></div>
+<div class="picker" id="picker" role="dialog" aria-modal="true" aria-label="Tarih seç" hidden>
+  <div class="pk-head">
+    <button type="button" class="pk-nav" id="pkPrev" aria-label="Önceki ay">‹</button>
+    <select id="pkMonth" aria-label="Ay"></select>
+    <select id="pkYear" aria-label="Yıl"></select>
+    <button type="button" class="pk-nav" id="pkNext" aria-label="Sonraki ay">›</button>
+  </div>
+  <div class="pk-week"><span>Pzt</span><span>Sal</span><span>Çar</span><span>Per</span><span>Cum</span><span>Cmt</span><span>Paz</span></div>
+  <div class="pk-grid" id="pkGrid"></div>
+  <div class="pk-actions">
+    <button type="button" class="link" id="pkToday">Bugün</button>
+    <button type="button" class="link" id="pkClear">Temizle</button>
+    <button type="button" class="link" id="pkCancel">Vazgeç</button>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script src="../ortak/depo.js"></script>
+<script>
+// ---- pure calculation (no DOM) ----
+const DAY = 864e5;
+function dn(s) { // "YYYY-MM-DD" -> UTC day number
+  if (!s || !/^\d{4}-\d{2}-\d{2}$/.test(s)) return null;
+  const [y, m, d] = s.split("-").map(Number);
+  return Math.floor(Date.UTC(y, m - 1, d) / DAY);
+}
+function ds(n) { return new Date(n * DAY).toISOString().slice(0, 10); }
+function windowFor(ref) { // 1 year back from ref: (ref - 1 year, ref]
+  const [y, m, d] = ref.split("-").map(Number);
+  const start = Math.floor(Date.UTC(y - 1, m - 1, d) / DAY) + 1;
+  return { start, end: dn(ref) };
+}
+// How flight days count: "split" = departure day Turkey, return day Germany (default);
+// "de" = both Germany; "tr" = both Turkey. Older data used travelDaysTR.
+function travelModeOf(settings) {
+  if (settings.travelMode === "de" || settings.travelMode === "tr" || settings.travelMode === "split") return settings.travelMode;
+  if (settings.travelDaysTR === true) return "tr";
+  if (settings.travelDaysTR === false) return "de";
+  return "split";
+}
+// Turkey days of one trip as [first, last] day numbers; open trip runs to `end`.
+function tripRange(t, settings, end) {
+  const o = dn(t.out); if (o == null) return null;
+  const b = dn(t.back), mode = travelModeOf(settings);
+  const lo = mode === "de" ? o + 1 : o;
+  const hi = b == null ? end : (mode === "tr" ? b : b - 1);
+  return hi >= lo ? [lo, hi] : null;
+}
+// Returns per-day codes ("d" Germany, "t" Turkey, "p" before move) and totals.
+function compute(trips, settings, ref) {
+  const { start, end } = windowFor(ref);
+  const move = dn(settings.moveDate);
+  const ranges = trips.map((t) => tripRange(t, settings, end)).filter(Boolean);
+  const days = [];
+  let de = 0, tr = 0, pre = 0;
+  for (let n = start; n <= end; n++) {
+    let c;
+    if (move != null && n < move) c = "p";
+    else if (ranges.some(([lo, hi]) => n >= lo && n <= hi)) c = "t";
+    else c = "d";
+    if (c === "d") de++; else if (c === "t") tr++; else pre++;
+    days.push(c);
+  }
+  return { start, end, days, de, tr, pre, total: end - start + 1 };
+}
+function tripDaysIn(t, settings, start, end) { // Turkey days of one trip inside [start,end]
+  const rg = tripRange(t, settings, end); if (!rg) return 0;
+  const move = dn(settings.moveDate);
+  const lo = Math.max(rg[0], start, move == null ? -Infinity : move), hi = Math.min(rg[1], end);
+  return hi >= lo ? hi - lo + 1 : 0;
+}
+// Slide the 1-year window forward day by day from `from` for `span` days.
+// Returns the lowest Germany count and the first date that falls below `min`.
+function lookAhead(trips, settings, from, span, min) {
+  let low = null, firstBelow = null;
+  for (let n = dn(from), last = dn(from) + span; n <= last; n++) {
+    const r = compute(trips, settings, ds(n));
+    if (r.pre) continue; // window still reaches before the move; not comparable
+    if (!low || r.de < low.de) low = { de: r.de, date: ds(n) };
+    if (firstBelow == null && r.de < min) firstBelow = { de: r.de, date: ds(n) };
+  }
+  return { low, firstBelow };
+}
+// ---- end pure calculation ----
+
+(() => {
+  const APP = "gun-sayaci";
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const MONTHS = ["Oca", "Şub", "Mar", "Nis", "May", "Haz", "Tem", "Ağu", "Eyl", "Eki", "Kas", "Ara"];
+  const MONTHS_LONG = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
+  // gün.ay.yıl, e.g. 06.11.2026
+  const fmt = (s) => { if (dn(s) == null) return "–"; const [y, m, d] = s.split("-"); return d + "." + m + "." + y; };
+  const todayStr = () => { const d = new Date(); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); };
+
+  let store = null, tripsCol = null, settingsDoc = null, ready = false, failed = false;
+  let trips = [], settings = { moveDate: "", travelMode: "split", minDE: 181 };
+  const minOf = () => (Number.isFinite(settings.minDE) ? settings.minDE : 181);
+  let ref = todayStr(), editingId = null;
+
+  function toast(msg) {
+    const t = $("toast"); t.textContent = msg; t.hidden = false;
+    clearTimeout(toast._t); toast._t = setTimeout(() => (t.hidden = true), 2600);
+  }
+  function writeError(e) {
+    if (e && e.code === "quota_exceeded") return "Telefonda yer kalmadı.";
+    return "Kaydedilemedi. Tekrar dene.";
+  }
+
+  function render() {
+    setDate("refDate", ref);
+    const r = compute(trips, settings, ref);
+    const today = dn(todayStr());
+    $("range").textContent = fmt(ds(r.start)) + " – " + fmt(ds(r.end)) + " · " + r.total + " gün";
+    renderBackupBanner();
+
+    if (!ready) { $("nDE").textContent = "–"; $("nTR").textContent = "–"; }
+    else {
+      $("nDE").textContent = r.de; $("nTR").textContent = r.tr;
+      const pct = (n) => r.total ? Math.round((n / r.total) * 100) : 0;
+      $("sDE").textContent = "gün · %" + pct(r.de);
+      $("sTR").textContent = "gün · %" + pct(r.tr);
+    }
+    renderGoal(r);
+    const ex = [];
+    if (r.pre) ex.push(`Taşınmadan önce: <b>${r.pre} gün</b>`);
+    const future = r.end > today ? r.end - today : 0;
+    if (future) ex.push(`Bunun <b>${future} günü</b> gelecekte (plan)`);
+    if (!settings.moveDate) ex.push(`Taşınma tarihi girilmedi — <button class="link" id="setMoveLink" style="padding:0">ekle</button>`);
+    ex.push("Uçuş günleri: <b>" + { split: "gidiş Türkiye'ye, dönüş Almanya'ya", de: "ikisi de Almanya'ya", tr: "ikisi de Türkiye'ye" }[travelModeOf(settings)] + "</b> sayılıyor");
+    $("extra").innerHTML = ex.map((x) => `<span>${x}</span>`).join("");
+    const ml = $("setMoveLink"); if (ml) ml.onclick = openSettings;
+
+    // strip
+    let html = "";
+    for (let i = 0; i < r.days.length; i++) {
+      const n = r.start + i;
+      html += `<span class="${r.days[i]}${n > today ? " f" : ""}"></span>`;
+    }
+    $("strip").innerHTML = ready ? html : "";
+    $("legPre").hidden = !r.pre; $("legFut").hidden = !future;
+    // month labels positioned by days
+    let mh = "", i = 0;
+    while (i < r.days.length) {
+      const d = new Date((r.start + i) * DAY);
+      const daysLeft = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 1)) / DAY - (r.start + i);
+      const len = Math.min(daysLeft, r.days.length - i);
+      mh += `<span style="flex-grow:${len}">${len >= 12 ? MONTHS[d.getUTCMonth()] : ""}</span>`;
+      i += len;
+    }
+    $("months").innerHTML = mh;
+
+    $("exampleBanner").hidden = !trips.some((t) => t.example);
+    const list = $("list");
+    if (failed) { list.innerHTML = ""; return; }
+    if (!ready) { list.innerHTML = `<div class="empty"><strong>Yükleniyor…</strong><span>Seyahatler getiriliyor.</span></div>`; return; }
+    if (!trips.length) {
+      list.innerHTML = `<div class="empty"><strong>Henüz seyahat yok</strong><span>“Seyahat ekle” ile Türkiye'ye gidiş ve Almanya'ya dönüş tarihlerini gir. Gelecek uçuşları da ekleyebilirsin. Yedek dosyan varsa onu yükleyebilirsin.</span><button class="btn" id="emptyImport">Yedek dosyasını yükle</button></div>`;
+      return;
+    }
+    const sorted = [...trips].sort((a, b) => String(b.out).localeCompare(String(a.out)));
+    list.innerHTML = sorted.map((t) => {
+      const o = dn(t.out), b = dn(t.back);
+      const bad = b != null && b < o;
+      const len = b == null ? null : b - o;
+      const inWin = tripDaysIn(t, settings, r.start, r.end);
+      const tags = [];
+      if (o > today) tags.push(`<span class="tag plan">Planlanan</span>`);
+      if (b == null) tags.push(`<span class="tag open">Dönüş belli değil</span>`);
+      if (bad) tags.push(`<span class="tag err">Dönüş gidişten önce</span>`);
+      if (t.example) tags.push(`<span class="tag ex">Örnek</span>`);
+      const meta = [len != null && !bad ? len + " gece" : "", t.note ? esc(t.note) : ""].filter(Boolean).join(" · ");
+      return `<button class="trip${inWin ? "" : " out-of-window"}" data-id="${esc(t.id)}">
+        <span>
+          <span class="dates">${fmt(t.out)} → ${b == null ? "?" : fmt(t.back)}</span>
+          ${meta ? `<span class="meta" style="display:block">${meta}</span>` : ""}
+          ${tags.length ? `<span class="tags">${tags.join("")}</span>` : ""}
+        </span>
+        <span class="inwin"><b>${inWin}</b><small>gün bu yılda</small></span>
+      </button>`;
+    }).join("");
+  }
+
+  function renderGoal(r) {
+    const g = $("goal");
+    if (!ready) { g.hidden = true; return; }
+    const min = minOf(), spare = r.de - min;
+    // look ahead 12 months from the chosen date, using planned trips too
+    const ahead = lookAhead(trips, settings, ds(r.end + 1), 365, min);
+    let cls, pill, title;
+    if (spare < 0) { cls = "bad"; pill = (-spare) + " gün eksik"; title = "Almanya'da " + min + " günün altında"; }
+    else if (ahead.firstBelow) { cls = "warn"; pill = "Dikkat"; title = "Şu an yeterli, ama planlanan uçuşlarla sınırın altına düşüyor"; }
+    else { cls = "ok"; pill = "Yeterli"; title = "Almanya'da en az " + min + " gün şartı sağlanıyor"; }
+    g.className = "goal " + cls;
+    const lines = [];
+    if (spare >= 0) lines.push(`Sınırın <strong>${spare} gün</strong> üstünde. Bu 1 yıl içinde Türkiye'de en fazla <strong>${spare} gün daha</strong> kalınabilir.`);
+    else lines.push(`Sınıra ulaşmak için bu dönemde <strong>${-spare} gün</strong> daha Almanya'da olmak gerekirdi.`);
+    if (ahead.firstBelow) lines.push(`Planlanan uçuşlarla <strong>${fmt(ahead.firstBelow.date)}</strong> tarihinde Almanya günü <strong>${ahead.firstBelow.de}</strong>'e düşüyor.`);
+    else if (ahead.low) lines.push(`Önümüzdeki 12 ayda (planlananlar dahil) en düşük: <strong>${ahead.low.de} gün</strong>, ${fmt(ahead.low.date)}.`);
+    const pct = Math.min(100, (r.de / r.total) * 100), mark = Math.min(100, (min / r.total) * 100);
+    g.innerHTML = `<div class="head"><span class="pill">${pill}</span><span class="title">${title}</span></div>
+      <div class="bar" aria-hidden="true"><i style="width:${pct}%"></i><b style="left:calc(${mark}% - 1px)"></b></div>
+      <div class="txt">${lines.map((l) => `<span>${l}</span>`).join("")}</div>`;
+    g.hidden = false;
+  }
+
+  // ---- sheets ----
+  function show(id) { $("scrim").hidden = false; $(id).hidden = false; }
+  function closeSheets() {
+    $("scrim").hidden = true; $("tripSheet").hidden = true; $("setSheet").hidden = true; $("bkSheet").hidden = true;
+    editingId = null; pendingRestore = null;
+  }
+  function openTrip(t) {
+    editingId = t ? t.id : null;
+    $("tripTitle").textContent = t ? "Seyahati düzenle" : "Seyahat ekle";
+    setDate("f-out", t ? t.out || "" : "");
+    setDate("f-back", t ? t.back || "" : "");
+    $("f-note").value = t ? t.note || "" : "";
+    $("tripErr").hidden = true;
+    const del = $("deleteTrip"); del.hidden = !t; del.classList.remove("armed"); del.textContent = "Sil";
+    show("tripSheet");
+  }
+  function openSettings() {
+    setDate("s-move", settings.moveDate || "");
+    $("s-travel").value = travelModeOf(settings);
+    $("s-min").value = minOf();
+    show("setSheet");
+  }
+  async function saveTrip(ev) {
+    ev.preventDefault();
+    if (!tripsCol) { toast("Veriler bu cihazda saklanamıyor."); return; }
+    const out = $("f-out").value, back = $("f-back").value;
+    const err = (m) => { $("tripErr").textContent = m; $("tripErr").hidden = false; };
+    if (!out) return err("Türkiye'ye gidiş tarihini gir.");
+    if (back && back < out) return err("Dönüş tarihi gidişten önce olamaz.");
+    const o = dn(out), b = back ? dn(back) : Infinity;
+    const clash = trips.find((t) => t.id !== editingId && dn(t.out) != null && o <= (t.back ? dn(t.back) : Infinity) && dn(t.out) <= b && !(o === dn(t.back) || b === dn(t.out)));
+    if (clash) return err("Bu tarihler başka bir seyahatle çakışıyor (" + fmt(clash.out) + ").");
+    const body = { out, back: back || "", note: $("f-note").value.trim(), updatedAt: Date.now() };
+    const id = editingId;
+    $("saveTrip").disabled = true;
+    try {
+      if (id) await tripsCol.doc(id).set(body); else await tripsCol.add(body);
+      closeSheets(); toast(id ? "Kaydedildi" : "Seyahat eklendi");
+    } catch (e) { toast(writeError(e)); }
+    $("saveTrip").disabled = false;
+  }
+  async function deleteTrip() {
+    const btn = $("deleteTrip");
+    if (!btn.classList.contains("armed")) { btn.classList.add("armed"); btn.textContent = "Emin misin? Sil"; return; }
+    try { await tripsCol.doc(editingId).delete(); closeSheets(); toast("Silindi"); } catch (e) { toast(writeError(e)); }
+  }
+  async function saveSettings(ev) {
+    ev.preventDefault();
+    if (!settingsDoc) { toast("Veriler bu cihazda saklanamıyor."); return; }
+    const minV = Math.max(0, Math.min(366, Math.round(Number($("s-min").value))));
+    const body = { moveDate: $("s-move").value || "", travelMode: $("s-travel").value, minDE: Number.isFinite(minV) ? minV : 181, updatedAt: Date.now() };
+    $("saveSet").disabled = true;
+    try { await settingsDoc.set(body); closeSheets(); toast("Ayarlar kaydedildi"); } catch (e) { toast(writeError(e)); }
+    $("saveSet").disabled = false;
+  }
+
+  // ---- backup ----
+  let pendingRestore = null;
+  function renderBackupBanner() {
+    const b = $("backupBanner");
+    if (!ready || failed || !trips.length) { b.hidden = true; return; }
+    const last = Depo.lastBackup(APP);
+    if (last && Date.now() - last < 30 * DAY) { b.hidden = true; return; }
+    $("backupBannerText").textContent = last
+      ? "Son yedek " + Math.floor((Date.now() - last) / DAY) + " gün önce alındı."
+      : "Henüz yedek almadın.";
+    b.hidden = false;
+  }
+  function renderBackupSheet() {
+    const last = Depo.lastBackup(APP);
+    $("bkLast").innerHTML = last ? `Son yedek: <b>${Depo.fmtDate(last)}</b>` : "Henüz yedek alınmadı.";
+    $("bkConfirm").hidden = !pendingRestore;
+    if (pendingRestore) {
+      $("bkConfirmText").textContent = "Şu anki " + trips.length + " seyahat ve ayarlar silinecek, yedekteki " +
+        pendingRestore.count + " seyahat yüklenecek" + (pendingRestore.date ? " (" + pendingRestore.date + " tarihli yedek)" : "") + ".";
+    }
+  }
+  function openBackup() { pendingRestore = null; renderBackupSheet(); show("bkSheet"); }
+  async function exportBackup() {
+    const obj = {
+      app: APP, format: 1, exportedAt: new Date().toISOString(),
+      data: { trips: trips.map((t) => Object.assign({}, t)), settings: Object.assign({}, settings) }
+    };
+    const res = await Depo.saveFile("gun-sayaci-yedek-" + Depo.todayStamp() + ".json", obj);
+    if (res === "cancelled") return;
+    Depo.setLastBackup(APP, Date.now());
+    renderBackupSheet(); render();
+    toast(res === "shared" ? "Yedek hazır" : "Yedek dosyası indirildi");
+  }
+  function parseBackup(obj) {
+    if (!obj || obj.app !== APP || !obj.data || !Array.isArray(obj.data.trips)) return null;
+    const map = {};
+    for (const t of obj.data.trips) {
+      if (!t || typeof t !== "object" || dn(t.out) == null) continue;
+      const rest = Object.assign({}, t); delete rest.id;
+      map[String(t.id || Depo.newId())] = rest;
+    }
+    const s = obj.data.settings && typeof obj.data.settings === "object" ? obj.data.settings : {};
+    const t = Date.parse(obj.exportedAt);
+    return {
+      state: { trips: map, settings: { main: s } },
+      count: Object.keys(map).length,
+      time: Number.isFinite(t) ? t : null, date: Number.isFinite(t) ? Depo.fmtDate(t) : ""
+    };
+  }
+  async function importBackup() {
+    let obj;
+    try { obj = await Depo.pickJson(); } catch (_) { toast("Dosya okunamadı. Doğru dosyayı seçtiğinden emin ol."); return; }
+    if (!obj) return;
+    const parsed = parseBackup(obj);
+    if (!parsed) { toast("Bu bir Gün Sayacı yedeği değil."); return; }
+    pendingRestore = parsed;
+    if (!trips.length) { applyRestore(); return; }
+    if ($("bkSheet").hidden) show("bkSheet");
+    renderBackupSheet();
+  }
+  function applyRestore() {
+    const p = pendingRestore; if (!p || !store) return;
+    try {
+      store.replaceAll(p.state);
+      if (p.time) Depo.setLastBackup(APP, p.time);
+      closeSheets();
+      toast(p.count + " seyahat yüklendi");
+    } catch (e) { toast(writeError(e)); }
+  }
+
+  // ---- Turkish date picker (Monday first) ----
+  const btnFor = (id) => document.querySelector(`.datebtn[data-for="${id}"]`);
+  function setDate(id, iso) {
+    $(id).value = iso || "";
+    const b = btnFor(id); if (!b) return;
+    b.textContent = iso ? fmt(iso) : (b.dataset.empty || "Tarih seç");
+    b.classList.toggle("empty", !iso);
+  }
+  let pk = { for: null, y: 2026, m: 0 };
+  function openPicker(id) {
+    const cur = $(id).value || todayStr();
+    const [y, m] = cur.split("-").map(Number);
+    pk = { for: id, y, m: m - 1 };
+    $("pkClear").hidden = !btnFor(id).dataset.optional;
+    drawPicker();
+    $("pkScrim").hidden = false; $("picker").hidden = false;
+  }
+  function closePicker() { $("pkScrim").hidden = true; $("picker").hidden = true; pk.for = null; }
+  function pick(iso) {
+    const id = pk.for; closePicker(); if (!id) return;
+    setDate(id, iso);
+    if (id === "refDate") { ref = iso || todayStr(); render(); }
+  }
+  function drawPicker() {
+    const thisY = new Date().getFullYear();
+    const lo = Math.min(2020, pk.y), hi = Math.max(thisY + 3, pk.y);
+    let yo = ""; for (let y = lo; y <= hi; y++) yo += `<option value="${y}"${y === pk.y ? " selected" : ""}>${y}</option>`;
+    $("pkYear").innerHTML = yo;
+    $("pkMonth").innerHTML = MONTHS_LONG.map((n, i) => `<option value="${i}"${i === pk.m ? " selected" : ""}>${n}</option>`).join("");
+    const offset = (new Date(Date.UTC(pk.y, pk.m, 1)).getUTCDay() + 6) % 7; // Monday = 0
+    const count = new Date(Date.UTC(pk.y, pk.m + 1, 0)).getUTCDate();
+    const sel = $(pk.for).value, today = todayStr();
+    let h = "<span></span>".repeat(offset);
+    for (let d = 1; d <= count; d++) {
+      const iso = pk.y + "-" + String(pk.m + 1).padStart(2, "0") + "-" + String(d).padStart(2, "0");
+      const cls = [iso === sel ? "sel" : "", iso === today ? "today" : ""].filter(Boolean).join(" ");
+      h += `<button type="button" data-iso="${iso}"${cls ? ` class="${cls}"` : ""} aria-label="${fmt(iso)}">${d}</button>`;
+    }
+    $("pkGrid").innerHTML = h;
+  }
+  function shiftMonth(n) { const t = pk.y * 12 + pk.m + n; pk.y = Math.floor(t / 12); pk.m = t % 12; drawPicker(); }
+
+  // ---- events ----
+  document.querySelectorAll(".datebtn").forEach((b) => b.addEventListener("click", () => openPicker(b.dataset.for)));
+  $("pkPrev").addEventListener("click", () => shiftMonth(-1));
+  $("pkNext").addEventListener("click", () => shiftMonth(1));
+  $("pkMonth").addEventListener("change", (e) => { pk.m = Number(e.target.value); drawPicker(); });
+  $("pkYear").addEventListener("change", (e) => { pk.y = Number(e.target.value); drawPicker(); });
+  $("pkGrid").addEventListener("click", (e) => { const b = e.target.closest("[data-iso]"); if (b) pick(b.dataset.iso); });
+  $("pkToday").addEventListener("click", () => pick(todayStr()));
+  $("pkClear").addEventListener("click", () => pick(""));
+  $("pkCancel").addEventListener("click", closePicker);
+  $("pkScrim").addEventListener("click", closePicker);
+  $("todayBtn").addEventListener("click", () => { ref = todayStr(); render(); });
+  $("addBtn").addEventListener("click", () => openTrip(null));
+  $("settingsBtn").addEventListener("click", openSettings);
+  $("backupBtn").addEventListener("click", openBackup);
+  $("backupBannerBtn").addEventListener("click", openBackup);
+  $("bkExport").addEventListener("click", exportBackup);
+  $("bkImport").addEventListener("click", importBackup);
+  $("bkConfirmYes").addEventListener("click", applyRestore);
+  $("bkConfirmNo").addEventListener("click", () => { pendingRestore = null; renderBackupSheet(); });
+  $("scrim").addEventListener("click", closeSheets);
+  document.querySelectorAll("[data-close]").forEach((b) => b.addEventListener("click", closeSheets));
+  $("tripForm").addEventListener("submit", saveTrip);
+  $("setForm").addEventListener("submit", saveSettings);
+  $("deleteTrip").addEventListener("click", deleteTrip);
+  $("list").addEventListener("click", (e) => {
+    if (e.target.closest("#emptyImport")) { importBackup(); return; }
+    const b = e.target.closest(".trip"); if (!b) return;
+    openTrip(trips.find((t) => t.id === b.dataset.id));
+  });
+  $("clearExamples").addEventListener("click", async () => {
+    try { for (const t of trips.filter((x) => x.example)) await tripsCol.doc(t.id).delete(); toast("Örnekler silindi"); }
+    catch (e) { toast(writeError(e)); }
+  });
+  document.addEventListener("keydown", (e) => { if (e.key !== "Escape") return; if (!$("picker").hidden) closePicker(); else closeSheets(); });
+  // Coming back to the app on another day: move "today" forward.
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible" && ref < todayStr() && $("picker").hidden) { ref = todayStr(); render(); }
+  });
+
+  // ---- data (stored on this device) ----
+  store = Depo.openStore(APP);
+  if (!store.available) {
+    failed = true; const n = $("notice"); n.hidden = false;
+    n.textContent = "Bu tarayıcı veri saklamaya izin vermiyor. Gizli sekmede açtıysan normal sekmede ya da ana ekrandaki simgeden aç.";
+    render();
+  } else {
+    Depo.askPersist();
+    tripsCol = store.collection("trips");
+    settingsDoc = store.doc("settings/main");
+    settingsDoc.onSnapshot((snap) => {
+      const d = snap && snap.exists ? snap.data() : null;
+      settings = d
+        ? { moveDate: d.moveDate || "", travelMode: travelModeOf(d), minDE: typeof d.minDE === "number" ? d.minDE : 181 }
+        : { moveDate: "", travelMode: "split", minDE: 181 };
+      if (ready) render();
+    });
+    tripsCol.onSnapshot((snap) => {
+      trips = snap.docs.map((d) => Object.assign({ id: d.id }, d.data()));
+      ready = true; render();
+    });
+  }
+  Depo.registerSW();
+})();
+</script>
+</body>
+</html>
