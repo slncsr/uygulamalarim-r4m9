@@ -1,0 +1,657 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Stok Dolabım</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Stok Dolabım">
+<meta name="theme-color" content="#F3F5F2" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#121816" media="(prefers-color-scheme: dark)">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Figtree:wght@400;500;600&display=swap">
+<style>
+:root { color-scheme: light; box-sizing: border-box; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+body { margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; -webkit-text-size-adjust: 100%; }
+img { max-width: 100%; }
+[hidden]:not([hidden=until-found i]) { display: none !important; }
+
+/* Layout: one phone-width column; sticky header with tabs, list of shelf rows with steppers, bottom sheets for editing and backup. */
+:root {
+  --bg: #F3F5F2;
+  --surface: #FFFFFF;
+  --ink: #1C2421;
+  --muted: #5B6863;
+  --line: #DCE3DF;
+  --accent: #2E6A5C;
+  --accent-ink: #FFFFFF;
+  --accent-soft: #E1EEE9;
+  --skin: #A9506A;
+  --skin-soft: #F6E6EB;
+  --health: #2F6390;
+  --health-soft: #E3ECF5;
+  --ok: #2E7A4C;  --ok-soft: #E2F1E7;
+  --warn: #9A5B00; --warn-soft: #FBEFD9;
+  --bad: #B0281F;  --bad-soft: #FBE4E1;
+  --shadow: 0 10px 30px rgba(20, 40, 34, .14);
+  --f-display: "Bricolage Grotesque", "Avenir Next", "Segoe UI", sans-serif;
+  --f-body: "Figtree", "Segoe UI", -apple-system, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #121816; --surface: #1B2320; --ink: #E8EEEB; --muted: #9AA8A2; --line: #2C3733;
+    --accent: #6FBFA8; --accent-ink: #0E1B17; --accent-soft: #1F332D;
+    --skin: #E58FA6; --skin-soft: #3A2129; --health: #8AB8E6; --health-soft: #1E2B3A;
+    --ok: #74C996; --ok-soft: #1C3226; --warn: #E8B05A; --warn-soft: #3A2D16; --bad: #F08A80; --bad-soft: #3D1F1C;
+    --shadow: 0 10px 30px rgba(0,0,0,.5);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #121816; --surface: #1B2320; --ink: #E8EEEB; --muted: #9AA8A2; --line: #2C3733;
+  --accent: #6FBFA8; --accent-ink: #0E1B17; --accent-soft: #1F332D;
+  --skin: #E58FA6; --skin-soft: #3A2129; --health: #8AB8E6; --health-soft: #1E2B3A;
+  --ok: #74C996; --ok-soft: #1C3226; --warn: #E8B05A; --warn-soft: #3A2D16; --bad: #F08A80; --bad-soft: #3D1F1C;
+  --shadow: 0 10px 30px rgba(0,0,0,.5);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 15px; line-height: 1.45; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.app { max-width: 560px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 0 120px; }
+
+header.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); padding-block: 18px 10px; display: grid; gap: 12px; }
+.brand { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.brand-right { display: flex; align-items: center; gap: 10px; }
+h1 { font-family: var(--f-display); font-weight: 700; font-size: 26px; letter-spacing: -.01em; margin: 0; text-wrap: balance; }
+.route { font-size: 12px; color: var(--muted); letter-spacing: .04em; white-space: nowrap; }
+.icon-btn { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 6px 12px; font-size: 13px; font-weight: 600; }
+
+.tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 4px; }
+.tab { border: 0; background: transparent; border-radius: 9px; padding: 8px 4px; font-weight: 600; font-size: 13px; color: var(--muted); display: flex; flex-direction: column; align-items: center; gap: 1px; min-width: 0; }
+.tab small { font-weight: 500; font-size: 11px; font-variant-numeric: tabular-nums; }
+.tab[aria-selected="true"] { background: var(--accent); color: var(--accent-ink); }
+
+.toolbar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.chip { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 5px 12px; font-size: 13px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.chip[aria-pressed="true"] { border-color: var(--ink); background: var(--ink); color: var(--bg); }
+/* 16px keeps iPhone from zooming in when the field is tapped */
+.sort { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 5px 12px; font-size: 16px; font-weight: 500; }
+.search { flex: 1 1 140px; min-width: 0; border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 5px 14px; font-size: 16px; }
+
+.banner { margin-top: 6px; display: flex; gap: 10px; align-items: center; justify-content: space-between; flex-wrap: wrap; background: var(--accent-soft); border-radius: 12px; padding: 10px 14px; font-size: 13px; }
+.banner button { border: 0; background: transparent; color: var(--accent); font-weight: 600; padding: 4px 0; }
+.banner.warn { background: var(--warn-soft); }
+.banner.warn button { color: var(--warn); }
+
+.list { display: grid; gap: 8px; margin-top: 10px; }
+.group-title { font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 14px 2px 2px; }
+
+.row { display: grid; grid-template-columns: 6px 1fr auto; align-items: center; gap: 12px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 10px 10px 10px 0; overflow: hidden; }
+.row .stripe { align-self: stretch; background: var(--ok); }
+.row.low .stripe { background: var(--warn); }
+.row.out .stripe { background: var(--bad); }
+.row .info { min-width: 0; border: 0; background: transparent; text-align: left; padding: 2px 0; display: grid; gap: 3px; }
+.name { font-weight: 600; font-size: 15px; overflow-wrap: anywhere; }
+.meta { font-size: 12.5px; color: var(--muted); overflow-wrap: anywhere; }
+.tags { display: flex; gap: 5px; flex-wrap: wrap; }
+.tag { font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 999px; letter-spacing: .02em; }
+.tag.ok { background: var(--ok-soft); color: var(--ok); }
+.tag.low { background: var(--warn-soft); color: var(--warn); }
+.tag.out { background: var(--bad-soft); color: var(--bad); }
+.tag.exp { background: var(--warn-soft); color: var(--warn); }
+.tag.expd { background: var(--bad-soft); color: var(--bad); }
+.tag.ex { background: var(--accent-soft); color: var(--accent); }
+
+.stepper { display: flex; align-items: center; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.stepper button { width: 40px; height: 40px; border: 0; background: transparent; font-size: 20px; line-height: 1; color: var(--ink); touch-action: manipulation; }
+.stepper button:active { background: var(--accent-soft); }
+.stepper button:disabled { color: var(--line); cursor: default; }
+.qty { min-width: 30px; text-align: center; font-family: var(--f-display); font-weight: 700; font-size: 18px; font-variant-numeric: tabular-nums; }
+
+.empty { text-align: center; padding: 48px 16px; color: var(--muted); display: grid; gap: 8px; justify-items: center; }
+.empty strong { color: var(--ink); font-family: var(--f-display); font-size: 18px; }
+.empty .btn { margin-top: 8px; }
+.shelf-art { width: 84px; height: 64px; }
+
+.shop-card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px; display: grid; gap: 10px; margin-top: 10px; }
+.shop-card h2 { font-family: var(--f-display); font-size: 18px; margin: 0; }
+.shop-card p { margin: 0; color: var(--muted); font-size: 13px; }
+.shop-item { display: flex; justify-content: space-between; gap: 10px; padding: 8px 0; border-top: 1px solid var(--line); font-size: 14px; }
+.shop-item span:last-child { color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.btn { border: 0; border-radius: 12px; padding: 11px 16px; font-weight: 600; background: var(--accent); color: var(--accent-ink); }
+.btn.ghost { background: transparent; color: var(--ink); border: 1px solid var(--line); }
+.btn.danger { background: transparent; color: var(--bad); border: 1px solid var(--bad); }
+.btn.danger.armed { background: var(--bad); color: var(--surface); }
+
+.fab { position: fixed; right: max(18px, calc(env(safe-area-inset-right, 0px) + 12px)); bottom: calc(env(safe-area-inset-bottom, 0px) + 18px); z-index: 6; height: 56px; padding: 0 22px 0 18px; border-radius: 28px; border: 0; background: var(--accent); color: var(--accent-ink); font-weight: 600; font-size: 15px; box-shadow: var(--shadow); display: flex; align-items: center; gap: 8px; }
+.fab svg { width: 20px; height: 20px; }
+
+.scrim { position: fixed; inset: 0; background: rgba(10, 20, 16, .45); z-index: 20; }
+.sheet { position: fixed; left: 0; right: 0; bottom: 0; z-index: 21; margin: 0 auto; max-width: 560px; max-height: 92%; overflow-y: auto; background: var(--surface); border-radius: 20px 20px 0 0; box-shadow: var(--shadow); padding-left: max(18px, env(safe-area-inset-left, 0px)); padding-right: max(18px, env(safe-area-inset-right, 0px)); padding-block: 10px calc(env(safe-area-inset-bottom, 0px) + 18px); }
+.grab { width: 40px; height: 4px; border-radius: 2px; background: var(--line); margin: 0 auto 10px; }
+.sheet h2 { font-family: var(--f-display); font-size: 20px; margin: 0 0 12px; }
+.sheet-p { margin: 0 0 12px; color: var(--muted); font-size: 14px; }
+.bk-last { font-size: 14px; margin-bottom: 12px; }
+.bk-last b { font-weight: 600; }
+.bk-confirm { margin-top: 14px; background: var(--bad-soft); border-radius: 12px; padding: 12px 14px; font-size: 14px; }
+.bk-confirm p { margin: 0 0 8px; }
+.bk-steps { margin: 0 0 12px; padding-left: 20px; color: var(--muted); font-size: 13.5px; display: grid; gap: 4px; }
+form { display: grid; gap: 12px; }
+label { display: grid; gap: 4px; font-size: 13px; font-weight: 600; color: var(--muted); }
+.field { border: 1px solid var(--line); background: var(--bg); border-radius: 10px; padding: 10px 12px; font-size: 16px; font-weight: 400; color: var(--ink); width: 100%; min-width: 0; }
+textarea.field { resize: vertical; min-height: 60px; }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.seg { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.seg button { border: 1px solid var(--line); background: var(--bg); border-radius: 10px; padding: 10px; font-weight: 600; font-size: 14px; }
+.seg button[aria-pressed="true"][data-cat="skin"] { background: var(--skin-soft); border-color: var(--skin); color: var(--skin); }
+.seg button[aria-pressed="true"][data-cat="health"] { background: var(--health-soft); border-color: var(--health); color: var(--health); }
+.hint { font-weight: 400; font-size: 12px; color: var(--muted); }
+.actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
+.actions .btn:first-child { flex: 1 1 auto; }
+
+.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(env(safe-area-inset-bottom, 0px) + 86px); z-index: 30; background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 12px; font-size: 14px; max-width: calc(100% - 32px); box-shadow: var(--shadow); }
+.notice { margin-top: 16px; background: var(--warn-soft); color: var(--warn); border-radius: 12px; padding: 12px 14px; font-size: 14px; }
+@media (prefers-reduced-motion: no-preference) {
+  .sheet:not([hidden]) { animation: up .22s ease-out; }
+  @keyframes up { from { transform: translateY(24px); opacity: .6; } to { transform: none; opacity: 1; } }
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <header class="top">
+    <div class="brand">
+      <h1>Stok Dolabım</h1>
+      <div class="brand-right">
+        <span class="route">TR → DE</span>
+        <button class="icon-btn" id="backupBtn">Yedek</button>
+      </div>
+    </div>
+    <div class="tabs" role="tablist">
+      <button class="tab" role="tab" id="tab-skin" data-tab="skin" aria-selected="true">Cilt bakımı<small id="c-skin">–</small></button>
+      <button class="tab" role="tab" id="tab-health" data-tab="health" aria-selected="false">İlaç &amp; vitamin<small id="c-health">–</small></button>
+      <button class="tab" role="tab" id="tab-shop" data-tab="shop" aria-selected="false">Alınacaklar<small id="c-shop">–</small></button>
+    </div>
+    <div class="toolbar" id="toolbar">
+      <button class="chip" data-filter="all" aria-pressed="true">Hepsi <span id="f-all">0</span></button>
+      <button class="chip" data-filter="low" aria-pressed="false">Azalan <span id="f-low">0</span></button>
+      <button class="chip" data-filter="out" aria-pressed="false">Biten <span id="f-out">0</span></button>
+      <input class="search" id="search" type="search" placeholder="Ara…" aria-label="Ürün ara">
+      <select class="sort" id="sort" aria-label="Sıralama">
+        <option value="name">Ada göre</option>
+        <option value="qty">Miktara göre</option>
+      </select>
+    </div>
+  </header>
+
+  <div id="backupBanner" class="banner warn" hidden>
+    <span id="backupBannerText"></span>
+    <button id="backupBannerBtn">Yedek al</button>
+  </div>
+  <div id="exampleBanner" class="banner" hidden>
+    <span>Listede örnek ürünler var.</span>
+    <button id="clearExamples">Örnekleri sil</button>
+  </div>
+  <div id="notice" class="notice" hidden></div>
+  <div id="list" class="list"></div>
+</div>
+
+<button class="fab" id="addBtn" aria-label="Ürün ekle">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+  Ürün ekle
+</button>
+
+<div class="scrim" id="scrim" hidden></div>
+<div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle" hidden>
+  <div class="grab"></div>
+  <h2 id="sheetTitle">Ürün ekle</h2>
+  <form id="form" novalidate>
+    <div class="seg" role="group" aria-label="Kategori">
+      <button type="button" data-cat="skin" id="seg-skin" aria-pressed="true">Cilt bakımı</button>
+      <button type="button" data-cat="health" id="seg-health" aria-pressed="false">İlaç &amp; vitamin</button>
+    </div>
+    <label>Ürün adı
+      <input class="field" id="f-name" required maxlength="80" placeholder="ör. C vitamini serumu">
+    </label>
+    <div class="two">
+      <label>Marka
+        <input class="field" id="f-brand" maxlength="60" placeholder="ör. Bioderma">
+      </label>
+      <label>Tür
+        <select class="field" id="f-type"></select>
+      </label>
+    </div>
+    <div class="two">
+      <label>Elimdeki adet
+        <input class="field" id="f-qty" type="number" inputmode="decimal" min="0" max="999" step="0.5" value="1">
+        <span class="hint">Yarım kutu için 0,5 yaz</span>
+      </label>
+      <label>Uyarı sınırı
+        <input class="field" id="f-min" type="number" inputmode="numeric" min="0" max="999" value="1">
+        <span class="hint">Bu adede düşünce “Azaldı” olur</span>
+      </label>
+    </div>
+    <label>Son kullanma tarihi
+      <input class="field" id="f-exp" type="month">
+    </label>
+    <label>Not
+      <textarea class="field" id="f-note" maxlength="300" placeholder="ör. Eczaneden, reçetesiz"></textarea>
+    </label>
+    <div class="actions">
+      <button type="submit" class="btn" id="saveBtn">Kaydet</button>
+      <button type="button" class="btn ghost" id="cancelBtn">Vazgeç</button>
+      <button type="button" class="btn danger" id="deleteBtn" hidden>Sil</button>
+    </div>
+  </form>
+</div>
+
+<div class="sheet" id="bkSheet" role="dialog" aria-modal="true" aria-labelledby="bkTitle" hidden>
+  <div class="grab"></div>
+  <h2 id="bkTitle">Yedek</h2>
+  <p class="sheet-p">Ürünlerin sadece bu telefonda saklanıyor. Ayda bir yedek al ve dosyayı iCloud Drive'a kaydet. Telefon değişirse ya da uygulama silinirse bu dosyadan geri yüklersin.</p>
+  <ol class="bk-steps">
+    <li>“Yedek al”a dokun.</li>
+    <li>Açılan menüde “Dosyalar'a Kaydet”i seç.</li>
+    <li>iCloud Drive'da bir klasör seçip “Kaydet”e dokun.</li>
+  </ol>
+  <div class="bk-last" id="bkLast"></div>
+  <div class="actions">
+    <button type="button" class="btn" id="bkExport">Yedek al</button>
+    <button type="button" class="btn ghost" id="bkImport">Yedekten geri yükle</button>
+  </div>
+  <div class="bk-confirm" id="bkConfirm" hidden>
+    <p id="bkConfirmText"></p>
+    <div class="actions">
+      <button type="button" class="btn danger armed" id="bkConfirmYes">Evet, geri yükle</button>
+      <button type="button" class="btn ghost" id="bkConfirmNo">Vazgeç</button>
+    </div>
+  </div>
+  <div class="actions" style="margin-top:14px">
+    <button type="button" class="btn ghost" id="bkClose">Kapat</button>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script src="../ortak/depo.js"></script>
+<script>
+(() => {
+  const APP = "stok-dolabim";
+  const TYPES = {
+    skin: ["Temizleyici", "Tonik", "Serum", "Nemlendirici", "Güneş kremi", "Göz kremi", "Maske", "Peeling", "Vücut bakımı", "Diğer"],
+    health: ["Vitamin", "Takviye", "Ağrı kesici", "Reçeteli ilaç", "Soğuk algınlığı", "Mide / sindirim", "Alerji", "Göz damlası", "Krem / merhem", "Diğer"]
+  };
+  const CAT_LABEL = { skin: "Cilt bakımı", health: "İlaç & vitamin" };
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+  let store = null, col = null, ready = false, failed = false;
+  let items = [];
+  let tab = "skin", filter = "all", query = "";
+  let editingId = null, formCat = "skin";
+  const localQty = new Map(), timers = {}, busy = {}, again = {};
+
+  const fmtQty = (q) => String(q).replace(".", ",");
+  const qtyOf = (it) => (localQty.has(it.id) ? localQty.get(it.id) : Number(it.qty) || 0);
+  function statusOf(it) {
+    const q = qtyOf(it), min = Number(it.min) || 0;
+    if (q <= 0) return "out";
+    if (q <= min) return "low";
+    return "ok";
+  }
+  function expiryOf(it) {
+    if (!it.expiry || !/^\d{4}-\d{2}$/.test(it.expiry)) return null;
+    const [y, m] = it.expiry.split("-").map(Number);
+    const end = new Date(y, m, 0, 23, 59);
+    const days = (end - Date.now()) / 864e5;
+    return { label: String(m).padStart(2, "0") + "/" + y, state: days < 0 ? "expd" : days <= 60 ? "exp" : "fine" };
+  }
+  let sortMode = "name";
+  try { const s = localStorage.getItem("stok-sort"); if (s === "name" || s === "qty") sortMode = s; } catch (_) {}
+  const byName = (a, b) => String(a.name).localeCompare(String(b.name), "tr");
+  // Name: A→Z. Quantity: fewest first, ties by name.
+  const byStatus = (a, b) => (sortMode === "qty" ? qtyOf(a) - qtyOf(b) : 0) || byName(a, b);
+
+  function toast(msg) {
+    const t = $("toast"); t.textContent = msg; t.hidden = false;
+    clearTimeout(toast._t); toast._t = setTimeout(() => (t.hidden = true), 2600);
+  }
+
+  // ---------- render ----------
+  function render() {
+    const skin = items.filter((i) => i.cat === "skin"), health = items.filter((i) => i.cat === "health");
+    const shop = items.filter((i) => statusOf(i) !== "ok");
+    $("c-skin").textContent = ready ? skin.length + " ürün" : "–";
+    $("c-health").textContent = ready ? health.length + " ürün" : "–";
+    $("c-shop").textContent = ready ? shop.length + " ürün" : "–";
+    document.querySelectorAll(".tab").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.tab === tab)));
+    $("toolbar").hidden = tab === "shop";
+    $("exampleBanner").hidden = !items.some((i) => i.example);
+    renderBackupBanner();
+
+    const list = $("list");
+    if (failed) { list.innerHTML = ""; return; }
+    if (!ready) { list.innerHTML = emptyHtml("Dolap açılıyor…", "Ürünlerin yükleniyor."); return; }
+    if (tab === "shop") { list.innerHTML = shopHtml(shop); return; }
+
+    const pool = tab === "skin" ? skin : health;
+    $("f-all").textContent = pool.length;
+    $("f-low").textContent = pool.filter((i) => statusOf(i) === "low").length;
+    $("f-out").textContent = pool.filter((i) => statusOf(i) === "out").length;
+    document.querySelectorAll(".chip").forEach((c) => c.setAttribute("aria-pressed", String(c.dataset.filter === filter)));
+
+    const q = query.trim().toLocaleLowerCase("tr");
+    let shown = pool.filter((i) => filter === "all" || statusOf(i) === filter);
+    if (q) shown = shown.filter((i) => [i.name, i.brand, i.type, i.note].join(" ").toLocaleLowerCase("tr").includes(q));
+    shown.sort(byStatus);
+
+    if (!items.length) {
+      list.innerHTML = emptyHtml("Dolap boş",
+        "Türkiye'den getirdiğin ilk ürünü “Ürün ekle” ile kaydet. Yedek dosyan varsa onu yükleyebilirsin.",
+        `<button class="btn" id="emptyImport">Yedek dosyasını yükle</button>`);
+      return;
+    }
+    if (!pool.length) {
+      list.innerHTML = emptyHtml(tab === "skin" ? "Cilt bakımı rafı boş" : "İlaç & vitamin rafı boş",
+        "Türkiye'den getirdiğin ilk ürünü “Ürün ekle” ile kaydet.");
+      return;
+    }
+    if (!shown.length) { list.innerHTML = emptyHtml("Eşleşen ürün yok", "Filtreyi ya da aramayı değiştir."); return; }
+    list.innerHTML = shown.map(rowHtml).join("");
+  }
+
+  function rowHtml(it) {
+    const st = statusOf(it), q = qtyOf(it), exp = expiryOf(it);
+    const stLabel = { ok: "Var", low: "Azaldı", out: "Bitti" }[st];
+    const meta = [it.brand, it.type].filter(Boolean).map(esc).join(" · ");
+    let tags = `<span class="tag ${st}">${stLabel}</span>`;
+    if (exp && exp.state !== "fine") tags += `<span class="tag ${exp.state}">${exp.state === "expd" ? "SKT geçti" : "SKT yakın"} ${exp.label}</span>`;
+    else if (exp) tags += `<span class="tag ok" style="background:transparent;padding-left:0">SKT ${exp.label}</span>`;
+    if (it.example) tags += `<span class="tag ex">Örnek</span>`;
+    return `<div class="row ${st}" data-id="${esc(it.id)}">
+      <span class="stripe"></span>
+      <button class="info" data-act="edit" aria-label="${esc(it.name)} düzenle">
+        <span class="name">${esc(it.name)}</span>
+        ${meta ? `<span class="meta">${meta}</span>` : ""}
+        <span class="tags">${tags}</span>
+      </button>
+      <div class="stepper">
+        <button data-act="dec" aria-label="Bir azalt" ${q <= 0 ? "disabled" : ""}>−</button>
+        <span class="qty" aria-label="Adet">${fmtQty(q)}</span>
+        <button data-act="inc" aria-label="Bir artır">+</button>
+      </div>
+    </div>`;
+  }
+
+  function shopHtml(shop) {
+    if (!shop.length) return `<div class="shop-card"><h2>Bir sonraki Türkiye dönüşü</h2><p>Şu an azalan ya da biten ürün yok. Her şey stokta.</p></div>`;
+    const groups = ["skin", "health"].map((c) => {
+      const g = shop.filter((i) => i.cat === c).sort(byStatus);
+      if (!g.length) return "";
+      return `<div class="group-title">${CAT_LABEL[c]}</div>` + g.map((i) => {
+        const q = qtyOf(i);
+        return `<div class="shop-item"><span>${esc(i.name)}${i.brand ? ` <span class="meta">· ${esc(i.brand)}</span>` : ""}</span><span>${q === 0 ? "bitti" : fmtQty(q) + " kaldı"}</span></div>`;
+      }).join("");
+    }).join("");
+    return `<div class="shop-card">
+      <h2>Bir sonraki Türkiye dönüşü</h2>
+      <p>Azalan ve biten ürünler. Listeyi kopyalayıp notlarına ya da WhatsApp'a yapıştırabilirsin.</p>
+      <div>${groups}</div>
+      <button class="btn" id="copyShop">Listeyi kopyala</button>
+    </div>`;
+  }
+
+  function emptyHtml(title, sub, extra) {
+    return `<div class="empty">
+      <svg class="shelf-art" viewBox="0 0 84 64" fill="none" aria-hidden="true">
+        <rect x="14" y="14" width="12" height="30" rx="3" fill="var(--skin-soft)" stroke="var(--skin)" stroke-width="1.5"/>
+        <rect x="17" y="8" width="6" height="7" rx="1.5" fill="var(--skin)"/>
+        <rect x="34" y="22" width="16" height="22" rx="4" fill="var(--health-soft)" stroke="var(--health)" stroke-width="1.5"/>
+        <rect x="33" y="17" width="18" height="6" rx="2" fill="var(--health)"/>
+        <circle cx="64" cy="36" r="8" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.5"/>
+        <path d="M6 46h72" stroke="var(--muted)" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      <strong>${esc(title)}</strong><span>${esc(sub)}</span>${extra || ""}</div>`;
+  }
+
+  // ---------- quantity writes (coalesced, one at a time per item) ----------
+  function changeQty(id, delta) {
+    const it = items.find((i) => i.id === id); if (!it || !col) return;
+    const next = Math.max(0, Math.min(999, qtyOf(it) + delta));
+    localQty.set(id, next); render();
+    clearTimeout(timers[id]); timers[id] = setTimeout(() => flush(id), 700);
+  }
+  async function flush(id) {
+    if (busy[id]) { again[id] = true; return; }
+    busy[id] = true;
+    const qty = localQty.get(id);
+    try { await col.doc(id).update({ qty, updatedAt: Date.now() }); }
+    catch (e) { toast(writeError(e)); }
+    busy[id] = false;
+    if (again[id]) { again[id] = false; flush(id); return; }
+    if (localQty.get(id) === qty) { localQty.delete(id); render(); }
+  }
+  function writeError(e) {
+    if (e && e.code === "quota_exceeded") return "Telefonda yer kalmadı. Bazı ürünleri silip tekrar dene.";
+    if (e && e.code === "not_found") return "Bu ürün artık yok.";
+    return "Kaydedilemedi. Tekrar dene.";
+  }
+
+  // ---------- edit sheet ----------
+  function fillTypes(cat, selected) {
+    $("f-type").innerHTML = TYPES[cat].map((t) => `<option${t === selected ? " selected" : ""}>${esc(t)}</option>`).join("");
+  }
+  function setFormCat(cat, keepType) {
+    formCat = cat;
+    $("seg-skin").setAttribute("aria-pressed", String(cat === "skin"));
+    $("seg-health").setAttribute("aria-pressed", String(cat === "health"));
+    fillTypes(cat, keepType);
+    $("f-name").placeholder = cat === "skin" ? "ör. C vitamini serumu" : "ör. D3 vitamini 1000 IU";
+  }
+  function openSheet(it) {
+    editingId = it ? it.id : null;
+    $("sheetTitle").textContent = it ? "Ürünü düzenle" : "Ürün ekle";
+    setFormCat(it ? it.cat : (tab === "health" ? "health" : "skin"), it && it.type);
+    $("f-name").value = it ? it.name || "" : "";
+    $("f-brand").value = it ? it.brand || "" : "";
+    $("f-qty").value = it ? qtyOf(it) : 1;
+    $("f-min").value = it ? Number(it.min) || 0 : 1;
+    $("f-exp").value = it ? it.expiry || "" : "";
+    $("f-note").value = it ? it.note || "" : "";
+    const del = $("deleteBtn"); del.hidden = !it; del.classList.remove("armed"); del.textContent = "Sil";
+    $("scrim").hidden = false; $("sheet").hidden = false;
+    if (!it) setTimeout(() => $("f-name").focus(), 50);
+  }
+  function closeSheet() { $("scrim").hidden = true; $("sheet").hidden = true; $("bkSheet").hidden = true; editingId = null; pendingRestore = null; }
+
+  async function save(ev) {
+    ev.preventDefault();
+    if (!col) { toast("Veriler bu cihazda saklanamıyor."); return; }
+    const name = $("f-name").value.trim();
+    if (!name) { $("f-name").focus(); toast("Ürün adını yaz."); return; }
+    const clamp = (v) => Math.max(0, Math.min(999, Math.round((Number(String(v).replace(",", ".")) || 0) * 2) / 2));
+    const body = {
+      cat: formCat, name, brand: $("f-brand").value.trim(), type: $("f-type").value,
+      qty: clamp($("f-qty").value), min: clamp($("f-min").value),
+      expiry: $("f-exp").value || "", note: $("f-note").value.trim(), updatedAt: Date.now()
+    };
+    const id = editingId;
+    $("saveBtn").disabled = true;
+    try {
+      if (id) { clearTimeout(timers[id]); localQty.delete(id); await col.doc(id).set(body); }
+      else await col.add(body);
+      closeSheet(); toast(id ? "Kaydedildi" : name + " eklendi");
+      if (tab !== "shop" && tab !== formCat) { tab = formCat; render(); }
+    } catch (e) { toast(writeError(e)); }
+    $("saveBtn").disabled = false;
+  }
+
+  async function removeCurrent() {
+    const btn = $("deleteBtn");
+    if (!btn.classList.contains("armed")) { btn.classList.add("armed"); btn.textContent = "Emin misin? Sil"; return; }
+    const id = editingId;
+    try { await col.doc(id).delete(); closeSheet(); toast("Silindi"); } catch (e) { toast(writeError(e)); }
+  }
+
+  // ---------- backup ----------
+  let pendingRestore = null;
+  const DAY = 864e5;
+  function renderBackupBanner() {
+    const b = $("backupBanner");
+    if (!ready || failed || !items.length) { b.hidden = true; return; }
+    const last = Depo.lastBackup(APP);
+    if (last && Date.now() - last < 30 * DAY) { b.hidden = true; return; }
+    $("backupBannerText").textContent = last
+      ? "Son yedek " + Math.floor((Date.now() - last) / DAY) + " gün önce alındı."
+      : "Henüz yedek almadın.";
+    b.hidden = false;
+  }
+  function renderBackupSheet() {
+    const last = Depo.lastBackup(APP);
+    $("bkLast").innerHTML = last ? `Son yedek: <b>${Depo.fmtDate(last)}</b>` : "Henüz yedek alınmadı.";
+    $("bkConfirm").hidden = !pendingRestore;
+    if (pendingRestore) {
+      $("bkConfirmText").textContent = "Şu anki " + items.length + " ürün silinecek, yedekteki " +
+        pendingRestore.count + " ürün yüklenecek" + (pendingRestore.date ? " (" + pendingRestore.date + " tarihli yedek)" : "") + ".";
+    }
+  }
+  function openBackup() {
+    pendingRestore = null; renderBackupSheet();
+    $("scrim").hidden = false; $("bkSheet").hidden = false;
+  }
+  async function exportBackup() {
+    const obj = {
+      app: APP, format: 1, exportedAt: new Date().toISOString(),
+      data: { items: items.map((i) => Object.assign({}, i, { qty: qtyOf(i) })) }
+    };
+    const res = await Depo.saveFile("stok-dolabim-yedek-" + Depo.todayStamp() + ".json", obj);
+    if (res === "cancelled") return;
+    Depo.setLastBackup(APP, Date.now());
+    renderBackupSheet(); render();
+    toast(res === "shared" ? "Yedek hazır" : "Yedek dosyası indirildi");
+  }
+  function parseBackup(obj) {
+    if (!obj || obj.app !== APP || !obj.data || !Array.isArray(obj.data.items)) return null;
+    const map = {};
+    for (const it of obj.data.items) {
+      if (!it || typeof it !== "object" || !it.name) continue;
+      const rest = Object.assign({}, it); delete rest.id;
+      if (rest.cat !== "skin" && rest.cat !== "health") rest.cat = "skin";
+      map[String(it.id || Depo.newId())] = rest;
+    }
+    const t = Date.parse(obj.exportedAt);
+    return { state: { items: map }, count: Object.keys(map).length, time: Number.isFinite(t) ? t : null, date: Number.isFinite(t) ? Depo.fmtDate(t) : "" };
+  }
+  async function importBackup() {
+    let obj;
+    try { obj = await Depo.pickJson(); } catch (_) { toast("Dosya okunamadı. Doğru dosyayı seçtiğinden emin ol."); return; }
+    if (!obj) return;
+    const parsed = parseBackup(obj);
+    if (!parsed) { toast("Bu bir Stok Dolabım yedeği değil."); return; }
+    pendingRestore = parsed;
+    if (!items.length) { applyRestore(); return; }
+    if ($("bkSheet").hidden) openBackupKeep();
+    renderBackupSheet();
+  }
+  function openBackupKeep() { $("scrim").hidden = false; $("bkSheet").hidden = false; }
+  function applyRestore() {
+    const p = pendingRestore; if (!p || !store) return;
+    try {
+      localQty.clear();
+      store.replaceAll(p.state);
+      if (p.time) Depo.setLastBackup(APP, p.time);
+      pendingRestore = null; closeSheet();
+      toast(p.count + " ürün yüklendi");
+    } catch (e) { toast(writeError(e)); }
+  }
+
+  // ---------- events ----------
+  document.querySelector(".tabs").addEventListener("click", (e) => {
+    const b = e.target.closest(".tab"); if (!b) return;
+    tab = b.dataset.tab; filter = "all"; render(); window.scrollTo({ top: 0 });
+  });
+  $("toolbar").addEventListener("click", (e) => {
+    const c = e.target.closest(".chip"); if (!c) return; filter = c.dataset.filter; render();
+  });
+  $("search").addEventListener("input", (e) => { query = e.target.value; render(); });
+  $("sort").value = sortMode;
+  $("sort").addEventListener("change", (e) => {
+    sortMode = e.target.value === "qty" ? "qty" : "name";
+    try { localStorage.setItem("stok-sort", sortMode); } catch (_) {}
+    render();
+  });
+  $("list").addEventListener("click", (e) => {
+    if (e.target.closest("#copyShop")) { copyShop(); return; }
+    if (e.target.closest("#emptyImport")) { importBackup(); return; }
+    const b = e.target.closest("[data-act]"); if (!b) return;
+    const id = b.closest(".row").dataset.id;
+    if (b.dataset.act === "inc") changeQty(id, 1);
+    else if (b.dataset.act === "dec") changeQty(id, -1);
+    else openSheet(items.find((i) => i.id === id));
+  });
+  $("addBtn").addEventListener("click", () => openSheet(null));
+  $("scrim").addEventListener("click", closeSheet);
+  $("cancelBtn").addEventListener("click", closeSheet);
+  $("deleteBtn").addEventListener("click", removeCurrent);
+  $("seg-skin").addEventListener("click", () => setFormCat("skin"));
+  $("seg-health").addEventListener("click", () => setFormCat("health"));
+  $("form").addEventListener("submit", save);
+  $("backupBtn").addEventListener("click", openBackup);
+  $("backupBannerBtn").addEventListener("click", openBackup);
+  $("bkExport").addEventListener("click", exportBackup);
+  $("bkImport").addEventListener("click", importBackup);
+  $("bkConfirmYes").addEventListener("click", applyRestore);
+  $("bkConfirmNo").addEventListener("click", () => { pendingRestore = null; renderBackupSheet(); });
+  $("bkClose").addEventListener("click", closeSheet);
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && (!$("sheet").hidden || !$("bkSheet").hidden)) closeSheet(); });
+  $("clearExamples").addEventListener("click", async () => {
+    const ex = items.filter((i) => i.example);
+    try { for (const i of ex) await col.doc(i.id).delete(); toast("Örnekler silindi"); } catch (e) { toast(writeError(e)); }
+  });
+
+  function copyShop() {
+    const shop = items.filter((i) => statusOf(i) !== "ok");
+    const text = "Türkiye'den alınacaklar\n" + ["skin", "health"].map((c) => {
+      const g = shop.filter((i) => i.cat === c).sort(byStatus);
+      return g.length ? "\n" + CAT_LABEL[c] + ":\n" + g.map((i) => "- " + i.name + (i.brand ? " (" + i.brand + ")" : "")).join("\n") : "";
+    }).join("");
+    try {
+      navigator.clipboard.writeText(text).then(() => toast("Liste kopyalandı"), () => toast("Kopyalanamadı. Listeyi elle seçebilirsin."));
+    } catch (_) { toast("Kopyalanamadı. Listeyi elle seçebilirsin."); }
+  }
+
+  // ---------- data (stored on this device) ----------
+  store = Depo.openStore(APP);
+  if (!store.available) {
+    failed = true;
+    const n = $("notice"); n.hidden = false;
+    n.textContent = "Bu tarayıcı veri saklamaya izin vermiyor. Gizli sekmede açtıysan normal sekmede ya da ana ekrandaki simgeden aç.";
+    render();
+  } else {
+    Depo.askPersist();
+    col = store.collection("items");
+    col.onSnapshot((snap) => {
+      items = snap.docs.map((d) => Object.assign({ id: d.id }, d.data()));
+      ready = true; render();
+    });
+  }
+  Depo.registerSW();
+})();
+</script>
+</body>
+</html>
